@@ -23,6 +23,9 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+//ARTUR
+int renice(int,int);
+int ps(void);
 
 // ulib.c
 int stat(const char*, struct stat*);

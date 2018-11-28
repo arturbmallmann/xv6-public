@@ -120,6 +120,9 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
+//ARTUR
+int		ps(void);
+int		renice(int,int);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

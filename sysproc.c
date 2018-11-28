@@ -89,3 +89,19 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+//ARTUR
+int sys_ps(void)
+{
+	return ps();
+}
+
+int sys_renice(void){
+  int pid,nice;
+
+  if(argint(0, &pid) < 0)
+    return -1;
+  if(argint(1, &nice) < 0)
+  	return -1;
+  return renice(pid,nice);
+}
