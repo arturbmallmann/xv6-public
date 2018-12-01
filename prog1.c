@@ -22,7 +22,7 @@ int main(int argc, char *argv[]){
 		renice(pid,f%20);
 		if(pid>0){
 			printf(1,"%d processo %d criado\n",getpid(),pid);
-			ps();
+	//		ps();
 			//wait();
 		}else if(pid<0)
 			printf(1,"%d Deu pau!\n",getpid());
@@ -30,7 +30,7 @@ int main(int argc, char *argv[]){
 			printf(1,"%d Sou eu! %d\n",getpid(),pid);
 			int o,u;
 			double x;
-
+while(1){}
 			for (o=0;o<640000;o++){
 				for(u=0;u<3500;u++)
 					x+=u;

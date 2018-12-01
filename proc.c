@@ -405,7 +405,8 @@ scheduler(void)
 }
 */
 int renice(int pid, int nice){
-
+  if(nice < 0 || nice > 20)
+   return -1;
   struct proc *p;
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
@@ -425,7 +426,7 @@ int ps(){
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
   
-	if(1 || p->pid !=0){ 
+	if(0 || p->pid !=0){ 
 		char status[10]="lol";
 	
 	if(p->state == SLEEPING){
@@ -468,7 +469,7 @@ sched(void)
   intena = mycpu()->intena;
   swtch(&p->context, mycpu()->scheduler);
   mycpu()->intena = intena;
-  p->passo+=100/(40 - p->nice);
+  p->passo+=1000/(21 - p->nice);
 }
 
 // Give up the CPU for one scheduling round.
