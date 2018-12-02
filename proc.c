@@ -337,6 +337,7 @@ rand()
 //#define TESTE
 #define UNO
 //#define DUE
+//#define STRIDE
 #ifdef UNO
 /* lottery */
 void
@@ -422,6 +423,53 @@ scheduler(void)
     }  
 }
 #endif
+#ifdef STRIDE
+void
+scheduler(void)
+{
+  struct proc *p=0;
+  struct cpu *c = mycpu();
+  c->proc = 0;
+  
+  for(;;){
+    // Enable interrupts on this processor.
+    sti();
+
+    // Loop over process table looking for process to run.
+    //int ndone=1;
+    acquire(&ptable.lock);
+    int inf=0x7FFFFFFF;
+   // cprintf("valor grandão %d\n",inf);
+    struct proc * little=ptable.proc;
+
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+   //   cprintf("%d \t %d \t %d\n",p->pid,p->state,p->passo);
+      if(p->state == RUNNABLE)
+      if(p->passo < inf){
+//                   cprintf("entramos");
+             little=p;
+             inf=p->passo;
+      }
+     }
+
+  //    cprintf("processo: %d\n",p);
+      p=little;
+      // Switch to chosen process.  It is the process's job
+      // to release ptable.lock and then reacquire it
+      // before jumping back to us.
+      c->proc = p;
+      switchuvm(p);
+      p->state = RUNNING;
+
+      swtch(&(c->scheduler), p->context);
+      switchkvm();
+      c->proc = 0;
+
+     release(&ptable.lock);
+    }  
+}
+#endif
+
 /*
 void
 scheduler(void)
