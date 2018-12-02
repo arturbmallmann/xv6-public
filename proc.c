@@ -329,7 +329,7 @@ rand()
 {
   //acquire(&tickslock);
   uint xticks = ticks;
-  //release(&tickslock);
+ // release(&tickslock);
   randstate=(randstate + xticks) % 0x1000000;
   randstate = randstate * 1664525 + 1013904223;
   return randstate;
