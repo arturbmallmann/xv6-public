@@ -320,51 +320,108 @@ wait(void)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
+#define TNUM 21
+#define OK 0
+#define NOTOK 1
+unsigned long randstate = 1;
+unsigned int
+rand()
+{
+  //acquire(&tickslock);
+  uint xticks = ticks;
+  //release(&tickslock);
+  randstate=(randstate + xticks) % 0x1000000;
+  randstate = randstate * 1664525 + 1013904223;
+  return randstate;
+}
+//#define TESTE
+#define UNO
+//#define DUE
+#ifdef UNO
+/* lottery */
 void
 scheduler(void)
 {
   struct proc *p=0;
   struct cpu *c = mycpu();
   c->proc = 0;
+
+//  struct proc 
   
   for(;;){
     // Enable interrupts on this processor.
     sti();
-
-    // Loop over process table looking for process to run.
-    //int ndone=1;
+	//ps();
     acquire(&ptable.lock);
-    int inf=0x7FFFFFFF;
-   // cprintf("valor grandão %d\n",inf);
-    struct proc * little=ptable.proc;
+//    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    int count;//,ok=NOTOK;
+    // tenta NPROC vezes, deve haver um limite de tentativas para que o escalonador não trave o Sistema operacional
+    // enquanto busca um processo RUNNABLE. Caso ele não exista o escalonador entrará em loop infinito.
+    for(count=0; count<NPROC; count++){
+    	int choosed=rand()%NPROC;
+      p= &ptable.proc[choosed];
+      int tickets = p->nice + 1;
+       if(p->state == RUNNABLE){
+        int sorte=rand();
+	if(sorte%tickets ==0 ){
 
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-   //   cprintf("%d \t %d \t %d\n",p->pid,p->state,p->passo);
-      if(p->state == RUNNABLE)
-      if(p->passo < inf){
-//      	     cprintf("entramos");
-	     little=p;
-	     inf=p->passo;
-      }
+		c->proc = p;
+		switchuvm(p);
+		p->state = RUNNING;
+		swtch(&(c->scheduler), p->context);
+		switchkvm();
+	 }
+	}
+	c->proc = 0;
      }
-
-  //    cprintf("processo: %d\n",p);
-      p=little;
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
-
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
-      c->proc = 0;
-
      release(&ptable.lock);
     }  
 }
 
+#endif
+#ifdef DUE
+// Lottery Só que não
+void
+scheduler(void)
+{
+  struct proc *p=0;
+  struct cpu *c = mycpu();
+  c->proc = 0;
+
+#ifdef TESTE
+ struct proc *  aux=0;
+#endif
+  for(;;){
+    // Enable interrupts on this processor.
+    sti();
+
+    acquire(&ptable.lock);
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+#ifdef TESTE
+//	cprintf("mem %ld tamanho %d \n",p,p-aux);
+	aux=p;
+#endif
+      int tickets = TNUM - p->nice;
+     // int tickets=1;
+      while(tickets>0){
+       if(p->state == RUNNABLE){
+		c->proc = p;
+		switchuvm(p);
+		p->state = RUNNING;
+		swtch(&(c->scheduler), p->context);
+//		cprintf("tickets remaining %d for %d\n",tickets,p->pid);
+		switchkvm();
+//		tickets=(rand()*20)-20;
+		
+	}else
+		tickets=0;
+      }
+      c->proc = 0;
+     }
+     release(&ptable.lock);
+    }  
+}
+#endif
 /*
 void
 scheduler(void)
@@ -421,7 +478,7 @@ int renice(int pid, int nice){
 }
 
 int ps(){
-  cprintf("pid \t state \t\t nice \t name \t stride\n");
+  cprintf("PID \t State \t\t Nice \t Name \t CCount \t PPID\n");
   struct proc *p;
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
@@ -439,7 +496,7 @@ int ps(){
 	}else{ 
 		strncpy(status,"OTHER",5);
 	}
-	cprintf("%d \t %s \t %d \t %s \t %d\n",p->pid,status,p->nice,p->name,p->passo);
+	cprintf("%d \t %s \t %d \t %s \t %d \t %d\n",p->pid,status,p->nice,p->name,p->passo,p->parent->pid);
 	}
   }
   release(&ptable.lock);
@@ -469,7 +526,7 @@ sched(void)
   intena = mycpu()->intena;
   swtch(&p->context, mycpu()->scheduler);
   mycpu()->intena = intena;
-  p->passo+=1000/(21 - p->nice);
+  p->passo++;
 }
 
 // Give up the CPU for one scheduling round.

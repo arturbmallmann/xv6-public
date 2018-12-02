@@ -19,7 +19,7 @@ int main(int argc, char *argv[]){
 	while(f<n){
 		f++;
 		pid=fork();
-		renice(pid,f%20);
+		renice(pid,(10+f)%20);
 		if(pid>0){
 			printf(1,"%d processo %d criado\n",getpid(),pid);
 	//		ps();
